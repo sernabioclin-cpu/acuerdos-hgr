@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Acuerdos HGR</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Acuerdos HGR">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#691c32">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@500&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+
+/* Layout: una columna tipo app de bolsillo; barra superior fija con pestañas, tarjetas de acuerdo con franja de estado */
+:root{
+  --bg:#f6f3f4; --surface:#ffffff; --fg:#231a1d; --muted:#6f6266; --line:#e4dcdf;
+  --guinda:#691c32; --guinda-soft:#f3e6ea; --oro:#bc955c;
+  --ok:#1e7a4c; --ok-soft:#e3f2ea; --warn:#a86a00; --warn-soft:#fbf0dc; --bad:#b3261e; --bad-soft:#fbe5e3; --info:#2f5f8a; --info-soft:#e4edf6;
+  --f-body:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"Noto Sans Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17121a; --surface:#221b24; --fg:#f1eaed; --muted:#b0a2a8; --line:#3a2f3a;
+  --guinda:#e08aa2; --guinda-soft:#3a2230; --oro:#d4b27e;
+  --ok:#6fd19c; --ok-soft:#173327; --warn:#f0b955; --warn-soft:#382a12; --bad:#ff8a80; --bad-soft:#3d1c1a; --info:#8ab8e6; --info-soft:#1b2a3a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17121a; --surface:#221b24; --fg:#f1eaed; --muted:#b0a2a8; --line:#3a2f3a;
+  --guinda:#e08aa2; --guinda-soft:#3a2230; --oro:#d4b27e;
+  --ok:#6fd19c; --ok-soft:#173327; --warn:#f0b955; --warn-soft:#382a12; --bad:#ff8a80; --bad-soft:#3d1c1a; --info:#8ab8e6; --info-soft:#1b2a3a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.hd{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 0}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-size:19px;margin:0;color:var(--guinda);letter-spacing:.01em}
+.sub{font-size:12px;color:var(--muted)}
+nav{display:flex;gap:4px;margin-top:10px}
+nav a{flex:1;text-align:center;padding:10px 6px 11px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;border-bottom:3px solid transparent}
+nav a[aria-current="page"]{color:var(--guinda);border-color:var(--guinda)}
+nav a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat.bad b{color:var(--bad)} .stat.info b{color:var(--info)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--guinda);border-color:var(--guinda);color:var(--surface)}
+.list{display:grid;gap:8px}
+.card{display:grid;grid-template-columns:5px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;text-align:left;font:inherit;color:inherit;width:100%;padding:0;cursor:pointer}
+.card .stripe{background:var(--line)}
+.card.vencido .stripe{background:var(--bad)} .card.proceso .stripe{background:var(--warn)} .card.validar .stripe{background:var(--info)} .card.ok .stripe{background:var(--ok)}
+.card .in{padding:10px 12px;min-width:0;display:grid;gap:4px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;color:var(--muted);align-items:center}
+.key{font-family:var(--f-mono);font-size:12px;color:var(--guinda)}
+.txt{font-size:14px}
+.pill{font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.p-pend{background:var(--guinda-soft);color:var(--guinda)} .p-proc{background:var(--warn-soft);color:var(--warn)} .p-val{background:var(--info-soft);color:var(--info)} .p-ok{background:var(--ok-soft);color:var(--ok)} .p-bad{background:var(--bad-soft);color:var(--bad)}
+.resp{font-weight:600;font-size:13px}
+.empty,.notice{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:16px;color:var(--muted);font-size:14px}
+.notice.err{border-style:solid;border-color:var(--bad);color:var(--fg)}
+.notice button,.btn{font:inherit;font-weight:600;border-radius:8px;padding:9px 14px;border:1px solid var(--guinda);background:var(--guinda);color:var(--surface);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--guinda)}
+.btn:disabled{opacity:.5;cursor:default}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:18px 0 8px}
+.sess{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+.sess>summary{list-style:none;padding:12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.sess>summary::-webkit-details-marker{display:none}
+.sess .body{padding:0 12px 12px;display:grid;gap:8px}
+.sess a{color:var(--guinda);font-weight:600;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+textarea{min-height:90px;resize:vertical}
+pre.msg{white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:var(--f-body);font-size:13px;max-height:340px;overflow:auto;margin:6px 0 8px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:13px;padding:8px;border:0;background:var(--surface);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--guinda-soft);color:var(--guinda);font-weight:600}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(20,10,15,.45);display:flex;align-items:flex-end;justify-content:center}
+.panel{background:var(--surface);width:100%;max-width:720px;border-radius:16px 16px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-height:88vh;overflow:auto;display:grid;gap:12px}
+.states{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.states button{font:inherit;font-size:13px;padding:10px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.states button[aria-pressed="true"]{border-color:var(--guinda);background:var(--guinda-soft);color:var(--guinda);font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;z-index:30}
+.fresh{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fresh button{font:inherit;font-size:12px;background:none;border:0;color:var(--guinda);font-weight:600;cursor:pointer;padding:4px}
+@media (max-width:420px){.states{grid-template-columns:repeat(2,1fr)}.stat b{font-size:21px}}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .08s}.card:active{transform:scale(.99)}}
+
+</style>
+</head>
+<body>
+<header><div class="hd">
+  <div class="brand"><h1>Acuerdos HGR</h1><span class="sub">Subdirección de Planeación y Calidad</span></div>
+  <nav>
+    <a href="#pendientes" data-v="pendientes">Pendientes</a>
+    <a href="#comites" data-v="comites">Comités</a>
+    <a href="#whatsapp" data-v="whatsapp">WhatsApp</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <div class="fresh"><span id="fresh">Cargando…</span><button id="reload" type="button">Actualizar</button></div>
+  <div id="banner"></div>
+
+  <section id="v-pendientes">
+    <div class="stats">
+      <div class="stat"><b id="s-abiertos">–</b><span>Abiertos</span></div>
+      <div class="stat bad"><b id="s-vencidos">–</b><span>Vencidos</span></div>
+      <div class="stat info"><b id="s-validar">–</b><span>Por validar</span></div>
+    </div>
+    <div class="chips" id="f-comite" role="group" aria-label="Filtrar por comité"></div>
+    <div class="list" id="pend-list"><div class="empty">Aquí aparecerán todos los acuerdos abiertos de todas las sesiones, del más antiguo al más reciente.</div></div>
+  </section>
+
+  <section id="v-comites" hidden><div id="com-list"><div class="empty">Aquí verás cada comité con sus sesiones, de la más reciente a la más antigua, y el enlace a cada minuta.</div></div></section>
+
+  <section id="v-whatsapp" hidden>
+    <label for="w-sesion" class="sub">Sesión</label>
+    <select id="w-sesion"></select>
+    <div class="seg" style="margin-top:10px" role="group" aria-label="Versión del mensaje">
+      <button type="button" id="w-corta" aria-pressed="true">Solo acuerdos de la sesión</button>
+      <button type="button" id="w-completa" aria-pressed="false">+ pendientes anteriores</button>
+    </div>
+    <pre class="msg" id="w-msg"></pre>
+    <div class="row"><button class="btn" type="button" id="w-copy">Copiar mensaje</button><a class="btn ghost" id="w-open" href="#" target="_blank" rel="noopener">Abrir en WhatsApp</a></div>
+    <p class="sub">Copia el mensaje y pégalo en el grupo de jefes. El botón de WhatsApp puede no abrir en algunos dispositivos.</p>
+  </section>
+</main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+    <div class="meta"><span class="key" id="sh-key"></span><span id="sh-com"></span></div>
+    <div id="sh-title" class="txt"></div>
+    <div class="meta"><span class="resp" id="sh-resp"></span><span id="sh-lim"></span></div>
+    <div class="sub">Estatus</div>
+    <div class="states" id="sh-states"></div>
+    <label for="sh-nota" class="sub">Nota o evidencia</label>
+    <textarea id="sh-nota" placeholder="Ej. Se entregó el oficio el 20/11; evidencia en Drive."></textarea>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="sh-cancel">Cancelar</button><button class="btn" type="button" id="sh-save">Guardar</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script>
+// ⇩⇩ Pega aquí la URL de tu aplicación web de Apps Script (termina en /exec)
+const API="https://script.google.com/macros/s/AKfycbz7RGuvC2YbMTX0WqVXLb470ae-0G4-OpVdqYG-Z7Lz1Kad3fiKIqokOV7JB-V9izSC8Q/exec";
+const LS_PIN="acuerdos_hgr_pin";
+function getPin(){try{return localStorage.getItem(LS_PIN)||""}catch(e){return""}}
+function setPin(p){try{localStorage.setItem(LS_PIN,p)}catch(e){}}
+const ESTADOS=["Pendiente","En proceso","Por validar","Cumplido","No cumplido","Cancelado"];
+const CERRADOS=new Set(["Cumplido","Cancelado"]);
+let rows=[], filtro="Todos", sel=null, version="corta";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function fecha(s){const m=String(s||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?new Date(+m[3],+m[2]-1,+m[1]):null}
+const hoy=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const _dd=d=>String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
+function semanas(r){const f=fecha(r.fecha);return f?Math.max(0,Math.floor((hoy()-f)/604800000)):null}
+function vencido(r){const l=fecha(r.limite);return !CERRADOS.has(r.estatus)&&l&&l<hoy()}
+function clase(r){if(vencido(r))return"vencido";if(r.estatus==="En proceso")return"proceso";if(r.estatus==="Por validar")return"validar";if(CERRADOS.has(r.estatus))return"ok";return""}
+function pill(r){const e=r.estatus||"Pendiente";const c={"Pendiente":"p-pend","En proceso":"p-proc","Por validar":"p-val","Cumplido":"p-ok","No cumplido":"p-bad","Cancelado":"p-ok"}[e]||"p-pend";return`<span class="pill ${c}">${esc(e)}</span>`+(vencido(r)?` <span class="pill p-bad">Vencido</span>`:"")}
+
+function parse(values){if(!values)return[];
+  const out=[];(values||[]).slice(1).forEach((v,i)=>{if(!v||!v[0])return;
+    out.push({row:i+2,id:v[0],comite:v[1]||"Sin comité",fecha:v[2]||"",minuta:v[3]||"",clave:v[4]||"",acuerdo:v[5]||"",resp:v[6]||"",cargo:v[7]||"",inicio:v[8]||"",limite:v[9]||"",estatus:v[10]||"Pendiente",cumpl:v[11]||"",nota:v[12]||"",estandar:v[13]||"",enlace:v[14]||""})});
+  return out}
+
+function card(r){const s=semanas(r);return`<button type="button" class="card ${clase(r)}" data-id="${esc(r.id)}"><span class="stripe"></span><span class="in">
+  <span class="meta"><span class="key">${esc(r.clave||r.id)}</span><span>${esc(r.comite)} · ${esc(r.fecha)}</span>${s!==null?`<span>${s===0?"esta semana":s+" sem. abierto"}</span>`:""}</span>
+  <span class="txt">${esc(r.acuerdo)}</span>
+  <span class="meta"><span class="resp">${esc(r.resp)}</span><span>Límite: ${esc(r.limite||"—")}</span>${pill(r)}</span></span></button>`}
+
+function renderPend(){
+  const abiertos=rows.filter(r=>!CERRADOS.has(r.estatus));
+  $("s-abiertos").textContent=abiertos.length;$("s-vencidos").textContent=abiertos.filter(vencido).length;$("s-validar").textContent=abiertos.filter(r=>r.estatus==="Por validar").length;
+  const coms=["Todos",...new Set(rows.map(r=>r.comite))];
+  if(!coms.includes(filtro))filtro="Todos";
+  $("f-comite").innerHTML=coms.map(c=>`<button type="button" class="chip" aria-pressed="${c===filtro}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  const l=abiertos.filter(r=>filtro==="Todos"||r.comite===filtro).sort((a,b)=>(fecha(a.fecha)||0)-(fecha(b.fecha)||0)||a.clave.localeCompare(b.clave));
+  $("pend-list").innerHTML=l.length?l.map(card).join(""):`<div class="empty">${rows.length?"No hay acuerdos abiertos en este filtro.":"La hoja aún no tiene acuerdos. Se agregan solos cuando Claude procesa una sesión."}</div>`;
+}
+
+function sesiones(){const m=new Map();rows.forEach(r=>{const k=r.comite+"|"+r.minuta;if(!m.has(k))m.set(k,{comite:r.comite,minuta:r.minuta,fecha:r.fecha,enlace:r.enlace,items:[]});m.get(k).items.push(r)});return[...m.values()].sort((a,b)=>(fecha(b.fecha)||0)-(fecha(a.fecha)||0))}
+
+function renderCom(){
+  const ss=sesiones();if(!ss.length){$("com-list").innerHTML=`<div class="empty">Aún no hay sesiones registradas.</div>`;return}
+  const porCom=new Map();ss.forEach(s=>{if(!porCom.has(s.comite))porCom.set(s.comite,[]);porCom.get(s.comite).push(s)});
+  $("com-list").innerHTML=[...porCom].map(([c,list])=>`<h2>${esc(c)}</h2>`+list.map((s,i)=>{const ab=s.items.filter(r=>!CERRADOS.has(r.estatus)).length;
+    return`<details class="sess"${i===0&&porCom.size===1?" open":""}><summary><span><b>${esc(s.fecha)}</b> <span class="sub">· ${esc(s.minuta)}</span></span><span class="pill ${ab?"p-pend":"p-ok"}">${ab} abiertos de ${s.items.length}</span></summary>
+    <div class="body">${s.enlace?`<a href="${esc(s.enlace)}" target="_blank" rel="noopener">Abrir minuta completa ↗</a>`:""}${s.items.sort((a,b)=>a.clave.localeCompare(b.clave)).map(card).join("")}</div></details>`}).join("")).join("");
+}
+
+function nombreCorto(resp){return resp.split(/;|,| y /)[0].trim()}
+function mensaje(){
+  const ss=sesiones();const s=ss.find(x=>x.comite+"|"+x.minuta===$("w-sesion").value)||ss[0];if(!s)return"";
+  const g=new Map();s.items.filter(r=>!CERRADOS.has(r.estatus)).forEach(r=>{const k=r.resp||"Sin responsable";if(!g.has(k))g.set(k,[]);g.get(k).push(r)});
+  let t=`*${s.comite} ${s.fecha} — Compromisos*\nBuenas tardes. Comparto los compromisos para reportar avance en la próxima sesión:\n`;
+  g.forEach((l,k)=>{t+=`\n*${k}*\n`+l.map(r=>`• ${r.acuerdo} — ${r.limite||"sin fecha"}`).join("\n")+"\n"});
+  if(version==="completa"){const prev=rows.filter(r=>r.comite===s.comite&&r.minuta!==s.minuta&&!CERRADOS.has(r.estatus)&&(fecha(r.fecha)||0)<(fecha(s.fecha)||0));
+    if(prev.length){t+=`\n*Pendientes de sesiones anteriores, aún abiertos*\n`+prev.sort((a,b)=>(fecha(a.fecha)||0)-(fecha(b.fecha)||0)).map(r=>{const w=semanas(r);return`• ${r.acuerdo} (${nombreCorto(r.resp)}) — desde ${r.fecha}${w?`, ${w} sem.`:""}${vencido(r)?" · VENCIDO":""}`}).join("\n")+"\n"}}
+  return t+`\nGracias por su colaboración.`}
+function renderWa(){const ss=sesiones();const cur=$("w-sesion").value;
+  $("w-sesion").innerHTML=ss.map(s=>`<option value="${esc(s.comite+"|"+s.minuta)}">${esc(s.comite)} · ${esc(s.fecha)} · ${esc(s.minuta)}</option>`).join("");
+  if(cur&&ss.some(s=>s.comite+"|"+s.minuta===cur))$("w-sesion").value=cur;
+  const m=ss.length?mensaje():"Cuando haya sesiones registradas, aquí se arma el mensaje por responsable.";$("w-msg").textContent=m;$("w-open").href="https://wa.me/?text="+encodeURIComponent(m);
+  $("w-corta").setAttribute("aria-pressed",version==="corta");$("w-completa").setAttribute("aria-pressed",version==="completa")}
+
+function renderAll(){renderPend();renderCom();renderWa()}
+function vista(){const v=(location.hash||"#pendientes").slice(1);const ok=["pendientes","comites","whatsapp"].includes(v)?v:"pendientes";
+  ["pendientes","comites","whatsapp"].forEach(n=>{$("v-"+n).hidden=n!==ok});document.querySelectorAll("nav a").forEach(a=>a.toggleAttribute("aria-current",a.dataset.v===ok)&&a.setAttribute("aria-current","page"));
+  document.querySelectorAll("nav a").forEach(a=>{if(a.dataset.v!==ok)a.removeAttribute("aria-current")})}
+window.addEventListener("hashchange",vista);vista();
+
+function toast(t){const e=$("toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
+function banner(code){const msgs={
+  pin:`PIN incorrecto. Escríbelo de nuevo.`,
+  config:`Falta pegar la URL de Apps Script en index.html (constante API).`,
+  red:`No hubo conexión con la hoja. Revisa tu internet y toca «Actualizar».`};
+  $("banner").innerHTML=`<div class="notice err">${msgs[code]||esc(code)}</div>`}
+function pedirPin(msg){$("banner").innerHTML=`<div class="notice"><b>Acceso</b><p style="margin:6px 0 10px">${msg||"Escribe tu PIN para ver los acuerdos."}</p><div class="row"><input id="pin" type="password" inputmode="numeric" autocomplete="current-password" style="flex:1;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)"><button type="button" id="pin-ok">Entrar</button></div></div>`;
+  $("pin-ok").onclick=()=>{setPin($("pin").value.trim());leer()};$("pin").onkeydown=e=>{if(e.key==="Enter")$("pin-ok").click()}}
+async function api(params){const u=API+"?"+new URLSearchParams({...params,pin:getPin()});const r=await fetch(u,{redirect:"follow"});return r.json()}
+async function leer(){if(!API.startsWith("https://")){banner("config");return}
+  if(!getPin()){pedirPin();return}
+  $("fresh").textContent="Actualizando…";
+  try{const j=await api({accion:"leer"});if(!j.ok){if(j.error==="pin"){setPin("");pedirPin("PIN incorrecto. Escríbelo de nuevo.")}else banner(j.error);return}
+    rows=parse(j.values);$("banner").innerHTML="";$("fresh").textContent=`Datos de la hoja · ${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}`;renderAll()}
+  catch(e){banner("red");$("fresh").textContent="Sin conexión"}}
+function abrir(id){const r=rows.find(x=>x.id===id);if(!r)return;sel={...r};$("sh-key").textContent=r.clave||r.id;$("sh-com").textContent=`${r.comite} · ${r.fecha}`;$("sh-title").textContent=r.acuerdo;$("sh-resp").textContent=r.resp;$("sh-lim").textContent="Límite: "+(r.limite||"—");$("sh-nota").value=r.nota;
+  $("sh-states").innerHTML=ESTADOS.map(e=>`<button type="button" aria-pressed="${e===r.estatus}" data-e="${e}">${e}</button>`).join("");$("sheet").hidden=false}
+document.addEventListener("click",e=>{const c=e.target.closest(".card");if(c){abrir(c.dataset.id);return}
+  const ch=e.target.closest(".chip");if(ch){filtro=ch.dataset.c;renderPend();return}
+  const st=e.target.closest("#sh-states button");if(st){sel.estatus=st.dataset.e;document.querySelectorAll("#sh-states button").forEach(b=>b.setAttribute("aria-pressed",b===st))}});
+$("sh-cancel").onclick=()=>{$("sheet").hidden=true};
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")$("sheet").hidden=true});
+$("sh-save").onclick=async()=>{if(!sel)return;const btn=$("sh-save");btn.disabled=true;btn.textContent="Guardando…";
+  try{const nota=$("sh-nota").value.trim();
+    const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({pin:getPin(),accion:"estatus",id:sel.id,estatus:sel.estatus,nota})});const j=await r.json();
+    if(!j.ok){toast(j.error==="pin"?"PIN incorrecto":j.error==="no_encontrado"?"Ese acuerdo ya no está en la hoja. Actualiza.":"No se guardó: "+j.error);return}
+    const x=rows.find(z=>z.id===sel.id);Object.assign(x,{estatus:j.estatus,cumpl:j.cumplimiento,nota});renderAll();$("sheet").hidden=true;toast(`${sel.clave||sel.id}: ${j.estatus}`)}
+  catch(e){toast("No hubo respuesta. Toca «Actualizar» y revisa antes de reintentar.")}
+  finally{btn.disabled=false;btn.textContent="Guardar"}};
+$("reload").onclick=()=>leer();
+$("w-sesion").onchange=renderWa;
+$("w-corta").onclick=()=>{version="corta";renderWa()};$("w-completa").onclick=()=>{version="completa";renderWa()};
+$("w-copy").onclick=()=>{const t=$("w-msg").textContent;navigator.clipboard.writeText(t).then(()=>toast("Mensaje copiado")).catch(()=>{const r=document.createRange();r.selectNodeContents($("w-msg"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Selecciónalo y cópialo")})};
+
+renderAll();
+leer();
+setInterval(()=>{if(!document.hidden&&getPin())leer()},180000);
+</script>
+</body>
+</html>
