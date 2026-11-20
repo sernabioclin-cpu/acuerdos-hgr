@@ -87,6 +87,10 @@ pre.msg{white-space:pre-wrap;word-break:break-word;background:var(--surface);bor
 .states{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .states button{font:inherit;font-size:13px;padding:10px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
 .states button[aria-pressed="true"]{border-color:var(--guinda);background:var(--guinda-soft);color:var(--guinda);font-weight:600}
+.edit{display:grid;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
+.edit label{font-size:12px;color:var(--muted)}
+.edit input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+.linkbtn{font:inherit;font-size:13px;font-weight:600;background:none;border:0;color:var(--guinda);cursor:pointer;padding:4px 0;justify-self:start}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;z-index:30}
 .fresh{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .fresh button{font:inherit;font-size:12px;background:none;border:0;color:var(--guinda);font-weight:600;cursor:pointer;padding:4px}
@@ -137,8 +141,16 @@ pre.msg{white-space:pre-wrap;word-break:break-word;background:var(--surface);bor
 <div class="sheet" id="sheet" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sh-title">
     <div class="meta"><span class="key" id="sh-key"></span><span id="sh-com"></span></div>
-    <div id="sh-title" class="txt"></div>
-    <div class="meta"><span class="resp" id="sh-resp"></span><span id="sh-lim"></span></div>
+    <div id="sh-view" style="display:grid;gap:6px">
+      <div id="sh-title" class="txt"></div>
+      <div class="meta"><span class="resp" id="sh-resp"></span><span id="sh-lim"></span></div>
+      <button type="button" class="linkbtn" id="sh-edit">✎ Editar acuerdo, responsable o fecha</button>
+    </div>
+    <div class="edit" id="sh-editbox" hidden>
+      <label for="e-acuerdo">Acuerdo</label><textarea id="e-acuerdo"></textarea>
+      <label for="e-resp">Responsable</label><input id="e-resp" type="text">
+      <label for="e-lim">Fecha límite</label><input id="e-lim" type="text" placeholder="dd/mm/aaaa">
+    </div>
     <div class="sub">Estatus</div>
     <div class="states" id="sh-states"></div>
     <label for="sh-nota" class="sub">Nota o evidencia</label>
@@ -232,18 +244,21 @@ async function leer(){if(!API.startsWith("https://")){banner("config");return}
   try{const j=await api({accion:"leer"});if(!j.ok){if(j.error==="pin"){setPin("");pedirPin("PIN incorrecto. Escríbelo de nuevo.")}else banner(j.error);return}
     rows=parse(j.values);$("banner").innerHTML="";$("fresh").textContent=`Datos de la hoja · ${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}`;renderAll()}
   catch(e){banner("red");$("fresh").textContent="Sin conexión"}}
-function abrir(id){const r=rows.find(x=>x.id===id);if(!r)return;sel={...r};$("sh-key").textContent=r.clave||r.id;$("sh-com").textContent=`${r.comite} · ${r.fecha}`;$("sh-title").textContent=r.acuerdo;$("sh-resp").textContent=r.resp;$("sh-lim").textContent="Límite: "+(r.limite||"—");$("sh-nota").value=r.nota;
+function abrir(id){const r=rows.find(x=>x.id===id);if(!r)return;sel={...r};$("sh-key").textContent=r.clave||r.id;$("sh-com").textContent=`${r.comite} · ${r.fecha}`;$("sh-title").textContent=r.acuerdo;$("sh-resp").textContent=r.resp;$("sh-lim").textContent="Límite: "+(r.limite||"—");$("sh-nota").value=r.nota;$("sh-editbox").hidden=true;$("sh-view").hidden=false;$("e-acuerdo").value=r.acuerdo;$("e-resp").value=r.resp;$("e-lim").value=r.limite;
   $("sh-states").innerHTML=ESTADOS.map(e=>`<button type="button" aria-pressed="${e===r.estatus}" data-e="${e}">${e}</button>`).join("");$("sheet").hidden=false}
 document.addEventListener("click",e=>{const c=e.target.closest(".card");if(c){abrir(c.dataset.id);return}
   const ch=e.target.closest(".chip");if(ch){filtro=ch.dataset.c;renderPend();return}
   const st=e.target.closest("#sh-states button");if(st){sel.estatus=st.dataset.e;document.querySelectorAll("#sh-states button").forEach(b=>b.setAttribute("aria-pressed",b===st))}});
+$("sh-edit").onclick=()=>{$("sh-view").hidden=true;$("sh-editbox").hidden=false;$("e-acuerdo").focus()};
 $("sh-cancel").onclick=()=>{$("sheet").hidden=true};
 $("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")$("sheet").hidden=true});
 $("sh-save").onclick=async()=>{if(!sel)return;const btn=$("sh-save");btn.disabled=true;btn.textContent="Guardando…";
-  try{const nota=$("sh-nota").value.trim();
-    const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({pin:getPin(),accion:"estatus",id:sel.id,estatus:sel.estatus,nota})});const j=await r.json();
-    if(!j.ok){toast(j.error==="pin"?"PIN incorrecto":j.error==="no_encontrado"?"Ese acuerdo ya no está en la hoja. Actualiza.":"No se guardó: "+j.error);return}
-    const x=rows.find(z=>z.id===sel.id);Object.assign(x,{estatus:j.estatus,cumpl:j.cumplimiento,nota});renderAll();$("sheet").hidden=true;toast(`${sel.clave||sel.id}: ${j.estatus}`)}
+  try{const nota=$("sh-nota").value.trim();const editando=!$("sh-editbox").hidden;
+    const body={pin:getPin(),accion:editando?"editar":"estatus",id:sel.id,estatus:sel.estatus,nota};
+    if(editando){const ac=$("e-acuerdo").value.trim();if(!ac){toast("El acuerdo no puede quedar vacío");return}Object.assign(body,{acuerdo:ac,responsable:$("e-resp").value.trim(),limite:$("e-lim").value.trim()})}
+    const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});const j=await r.json();
+    if(!j.ok){toast(j.error==="pin"?"PIN incorrecto":j.error==="no_encontrado"?"Ese acuerdo ya no está en la hoja. Actualiza.":j.error==="accion_desconocida"?"Falta publicar la nueva versión del Apps Script":"No se guardó: "+j.error);return}
+    const x=rows.find(z=>z.id===sel.id);Object.assign(x,{estatus:j.estatus,cumpl:j.cumplimiento,nota});if(editando)Object.assign(x,{acuerdo:body.acuerdo,resp:body.responsable,limite:body.limite});renderAll();$("sheet").hidden=true;toast(`${sel.clave||sel.id}: ${j.estatus}`)}
   catch(e){toast("No hubo respuesta. Toca «Actualizar» y revisa antes de reintentar.")}
   finally{btn.disabled=false;btn.textContent="Guardar"}};
 $("reload").onclick=()=>leer();
