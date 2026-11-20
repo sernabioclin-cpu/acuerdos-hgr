@@ -92,6 +92,7 @@ pre.msg{white-space:pre-wrap;word-break:break-word;background:var(--surface);bor
 .edit input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
 .linkbtn{font:inherit;font-size:13px;font-weight:600;background:none;border:0;color:var(--guinda);cursor:pointer;padding:4px 0;justify-self:start}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;z-index:30}
+.proc{display:flex;gap:8px;align-items:center;margin:10px 0 4px}.proc .btn{flex:1;text-align:center;text-decoration:none}
 .fresh{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .fresh button{font:inherit;font-size:12px;background:none;border:0;color:var(--guinda);font-weight:600;cursor:pointer;padding:4px}
 @media (max-width:420px){.states{grid-template-columns:repeat(2,1fr)}.stat b{font-size:21px}}
@@ -111,6 +112,7 @@ pre.msg{white-space:pre-wrap;word-break:break-word;background:var(--surface);bor
 
 <main class="wrap">
   <div class="fresh"><span id="fresh">Cargando…</span><button id="reload" type="button">Actualizar</button></div>
+  <div class="proc"><a class="btn" id="proc" href="#" target="_blank" rel="noopener">▶ Procesa las sesiones de hoy</a><button type="button" class="linkbtn" id="proc-cfg" aria-label="Cambiar el enlace de Claude">⚙︎</button></div>
   <div id="banner"></div>
 
   <section id="v-pendientes">
@@ -156,6 +158,14 @@ pre.msg{white-space:pre-wrap;word-break:break-word;background:var(--surface);bor
     <label for="sh-nota" class="sub">Nota o evidencia</label>
     <textarea id="sh-nota" placeholder="Ej. Se entregó el oficio el 20/11; evidencia en Drive."></textarea>
     <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="sh-cancel">Cancelar</button><button class="btn" type="button" id="sh-save">Guardar</button></div>
+  </div>
+</div>
+<div class="sheet" id="cfg" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="cfg-t">
+    <b id="cfg-t">Enlace de Claude</b>
+    <p class="sub" style="margin:0">El botón copia la frase «procesa las sesiones de hoy» y abre este enlace. Pega aquí el enlace del proyecto o del chat donde procesas las minutas (en Claude: Compartir o copiar el enlace desde el navegador). Si lo dejas como está, abre el proyecto «Minutas de comités HGR y Seguimiento de Acuerdos»; ahí solo pegas la frase y la envías.</p>
+    <input id="cfg-url" type="url" inputmode="url" style="font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);width:100%">
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="cfg-cancel">Cancelar</button><button class="btn" type="button" id="cfg-save">Guardar</button></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -264,6 +274,18 @@ $("sh-save").onclick=async()=>{if(!sel)return;const btn=$("sh-save");btn.disable
 $("reload").onclick=()=>leer();
 $("w-sesion").onchange=renderWa;
 $("w-corta").onclick=()=>{version="corta";renderWa()};$("w-completa").onclick=()=>{version="completa";renderWa()};
+// Botón «Procesa las sesiones de hoy»: copia la frase y abre Claude en el enlace guardado
+const FRASE="procesa las sesiones de hoy",LS_CL="acuerdos_hgr_claude",CL_DEF="https://claude.ai/project/01a1f7d9-f9be-764e-a236-168843f9ceee";
+function getCl(){try{return localStorage.getItem(LS_CL)||""}catch(e){return""}}
+function setCl(u){try{localStorage.setItem(LS_CL,u)}catch(e){}}
+function pintaProc(){$("proc").href=getCl()||CL_DEF}
+function abreCfg(){$("cfg-url").value=getCl()||CL_DEF;$("cfg").hidden=false}
+pintaProc();
+$("proc").onclick=()=>{try{navigator.clipboard.writeText(FRASE).then(()=>toast("Frase copiada: pégala en Claude si no aparece")).catch(()=>{})}catch(e){}};
+$("proc-cfg").onclick=abreCfg;
+$("cfg-cancel").onclick=()=>{$("cfg").hidden=true};
+$("cfg").onclick=e=>{if(e.target.id==="cfg")$("cfg").hidden=true};
+$("cfg-save").onclick=()=>{const u=$("cfg-url").value.trim();if(u&&!/^https:\/\//i.test(u)){toast("El enlace debe empezar con https://");return}setCl(u===CL_DEF?"":u);pintaProc();$("cfg").hidden=true;toast("Enlace guardado")};
 $("w-copy").onclick=()=>{const t=$("w-msg").textContent;navigator.clipboard.writeText(t).then(()=>toast("Mensaje copiado")).catch(()=>{const r=document.createRange();r.selectNodeContents($("w-msg"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Selecciónalo y cópialo")})};
 
 renderAll();
